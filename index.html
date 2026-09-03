@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>配送依頼入力</title>
+<style>
+  :root{
+    --ink:#1c2430;
+    --paper:#f5f3ee;
+    --panel:#ffffff;
+    --line:#d8d3c7;
+    --accent:#c65d2e;
+    --accent-ink:#ffffff;
+    --sub:#6b6255;
+    --danger:#b3432f;
+    --ok:#3f6d4e;
+    --radius:4px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:20px 18px 16px;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header .tag{
+    font-size:11px;
+    letter-spacing:.08em;
+    color:#b8bdc4;
+    margin-bottom:4px;
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+    font-weight:700;
+  }
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:16px 14px 0;
+  }
+  section.card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 16px 18px;
+    margin-bottom:14px;
+  }
+  section.card > .label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    margin-bottom:10px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:var(--sub);
+    margin-bottom:5px;
+  }
+  input[type="date"],
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea{
+    width:100%;
+    padding:11px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    font-size:16px;
+    color:var(--ink);
+    font-family:inherit;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%236b6255'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:30px;
+  }
+  textarea{resize:vertical;min-height:64px;}
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--ink);
+  }
+  .row2{display:flex;gap:8px;}
+  .row2 > div{flex:1;}
+  .other-input{margin-top:8px;}
+  .hidden{display:none !important;}
+
+  .entry-block{
+    border-left:3px solid var(--line);
+    padding-left:12px;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .entry-block .entry-num{
+    font-size:11px;
+    color:var(--sub);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .entry-block .remove-btn{
+    position:absolute;
+    right:0;
+    top:0;
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:12.5px;
+    padding:2px 4px;
+    cursor:pointer;
+  }
+  .add-btn{
+    width:100%;
+    padding:10px;
+    border:1px dashed var(--sub);
+    border-radius:var(--radius);
+    background:none;
+    color:var(--sub);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .add-btn:active{background:#eeeae1;}
+
+  .submit-bar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--paper);
+    border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  }
+  .submit-bar .inner{max-width:520px;margin:0 auto;}
+  button#submitBtn{
+    width:100%;
+    padding:14px;
+    background:var(--accent);
+    color:var(--accent-ink);
+    border:none;
+    border-radius:var(--radius);
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  button#submitBtn:disabled{opacity:.5;}
+  .status-msg{
+    text-align:center;
+    font-size:13px;
+    margin-top:8px;
+    min-height:16px;
+  }
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--danger);}
+
+  .yen-wrap{position:relative;}
+  .yen-wrap span{
+    position:absolute;
+    left:10px; top:50%; transform:translateY(-50%);
+    color:var(--sub); font-size:15px;
+  }
+  .yen-wrap input{padding-left:26px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">配送依頼</div>
+  <h1>依頼入力フォーム</h1>
+</header>
+
+<main>
+  <form id="requestForm">
+
+    <section class="card">
+      <div class="label">配達日</div>
+      <div class="field">
+        <input type="date" id="deliveryDate" required>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">荷主</div>
+      <div class="field">
+        <select id="shipper">
+          <option value="">選択してください</option>
+          <option>共創社</option>
+          <option>白子</option>
+          <option>佐川急便</option>
+          <option>メタル便</option>
+          <option>ルーフィ</option>
+          <option>高橋プレス</option>
+          <option>テイエム企画</option>
+          <option>LIBERO</option>
+          <option>ホシノ</option>
+          <option>篠原</option>
+          <option>三協印刷紙器</option>
+          <option value="__other__">その他（自分で入力）</option>
+        </select>
+        <input type="text" class="other-input hidden" id="shipperOther" placeholder="荷主名を入力">
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">
+        <span>集荷</span>
+      </div>
+      <div id="pickupList"></div>
+      <button type="button" class="add-btn" id="addPickup">＋ 集荷を追加</button>
+    </section>
+
+    <section class="card">
+      <div class="label">
+        <span>配達</span>
+      </div>
+      <div id="deliveryList"></div>
+      <button type="button" class="add-btn" id="addDelivery">＋ 配達を追加</button>
+    </section>
+
+    <section class="card">
+      <div class="label">備考</div>
+      <div class="field">
+        <textarea id="notes" placeholder="特記事項があれば入力"></textarea>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">金額</div>
+      <div class="field">
+        <div class="yen-wrap">
+          <span>¥</span>
+          <input type="number" id="amount" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+    </section>
+
+  </form>
+</main>
+
+<div class="submit-bar">
+  <div class="inner">
+    <button id="submitBtn" type="button">送信する</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+</div>
+
+<script>
+/* ============ 設定 ============ */
+// ここに GAS のウェブアプリURLを貼り付けてください
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwC9l8xgt7bY13edO7iyR6dAcCkfeVjdKhuk4qVIWuKVUnEQ8svy3vziV80zCvUkqk/exec";
+
+const PICKUP_PLACES = ["共創社","白子","メタル便","高橋プレス","テイエム企画","LIBERO","ホシノ","篠原","三協印刷紙器"];
+const DELIVERY_TIME_OPTIONS = ["AM","当日","即時","翌日"];
+
+let pickupCount = 0;
+let deliveryCount = 0;
+
+/* ============ 集荷ブロック ============ */
+function addPickupBlock(){
+  pickupCount++;
+  const idx = pickupCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'entry-block';
+  wrap.dataset.idx = idx;
+
+  const hourOptions = Array.from({length:24},(_,h)=>`<option value="${String(h).padStart(2,'0')}">${String(h).padStart(2,'0')}</option>`).join('');
+  const minOptions = ['00','15','30','45'].map(m=>`<option value="${m}">${m}</option>`).join('');
+  const placeOptions = PICKUP_PLACES.map(p=>`<option>${p}</option>`).join('');
+
+  wrap.innerHTML = `
+    ${idx > 1 ? `<button type="button" class="remove-btn">削除</button>` : ''}
+    <div class="entry-num">集荷 ${idx}</div>
+    <div class="field">
+      <label>集荷時間</label>
+      <div class="row2">
+        <div>
+          <select class="pu-hour">
+            <option value="">時</option>
+            ${hourOptions}
+          </select>
+        </div>
+        <div>
+          <select class="pu-min">
+            <option value="">分</option>
+            ${minOptions}
+          </select>
+        </div>
+      </div>
+      <select class="pu-time-mode" style="margin-top:8px;">
+        <option value="select">時・分から選ぶ</option>
+        <option value="__other__">その他（自分で入力）</option>
+      </select>
+      <input type="text" class="other-input hidden pu-time-other" placeholder="例：昼過ぎ、〜まで、など">
+    </div>
+    <div class="field">
+      <label>集荷場所</label>
+      <select class="pu-place">
+        <option value="">選択してください</option>
+        ${placeOptions}
+        <option value="__other__">その他（自分で入力）</option>
+      </select>
+      <input type="text" class="other-input hidden pu-place-other" placeholder="集荷場所を入力">
+    </div>
+  `;
+  document.getElementById('pickupList').appendChild(wrap);
+  bindEntryEvents(wrap);
+}
+
+/* ============ 配達ブロック ============ */
+function addDeliveryBlock(){
+  deliveryCount++;
+  const idx = deliveryCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'entry-block';
+  wrap.dataset.idx = idx;
+
+  const timeOptions = DELIVERY_TIME_OPTIONS.map(t=>`<option>${t}</option>`).join('');
+
+  wrap.innerHTML = `
+    ${idx > 1 ? `<button type="button" class="remove-btn">削除</button>` : ''}
+    <div class="entry-num">配達 ${idx}</div>
+    <div class="field">
+      <label>配達時間</label>
+      <select class="dl-time">
+        <option value="">選択してください</option>
+        ${timeOptions}
+        <option value="__other__">その他（自分で入力）</option>
+      </select>
+      <input type="text" class="other-input hidden dl-time-other" placeholder="配達時間を入力">
+    </div>
+    <div class="field">
+      <label>配達場所</label>
+      <input type="text" class="dl-place" placeholder="配達場所を入力">
+    </div>
+  `;
+  document.getElementById('deliveryList').appendChild(wrap);
+  bindEntryEvents(wrap);
+}
+
+function bindEntryEvents(wrap){
+  const removeBtn = wrap.querySelector('.remove-btn');
+  if(removeBtn){
+    removeBtn.addEventListener('click', ()=> wrap.remove());
+  }
+  const puMode = wrap.querySelector('.pu-time-mode');
+  if(puMode){
+    puMode.addEventListener('change', (e)=>{
+      const other = wrap.querySelector('.pu-time-other');
+      const isOther = e.target.value === '__other__';
+      other.classList.toggle('hidden', !isOther);
+      wrap.querySelector('.pu-hour').disabled = isOther;
+      wrap.querySelector('.pu-min').disabled = isOther;
+    });
+  }
+  const puPlace = wrap.querySelector('.pu-place');
+  if(puPlace){
+    puPlace.addEventListener('change', (e)=>{
+      wrap.querySelector('.pu-place-other').classList.toggle('hidden', e.target.value !== '__other__');
+    });
+  }
+  const dlTime = wrap.querySelector('.dl-time');
+  if(dlTime){
+    dlTime.addEventListener('change', (e)=>{
+      wrap.querySelector('.dl-time-other').classList.toggle('hidden', e.target.value !== '__other__');
+    });
+  }
+}
+
+document.getElementById('shipper').addEventListener('change', (e)=>{
+  document.getElementById('shipperOther').classList.toggle('hidden', e.target.value !== '__other__');
+});
+
+document.getElementById('addPickup').addEventListener('click', addPickupBlock);
+document.getElementById('addDelivery').addEventListener('click', addDeliveryBlock);
+
+addPickupBlock();
+addDeliveryBlock();
+
+/* ============ データ収集 ============ */
+function getPickupData(){
+  return Array.from(document.querySelectorAll('#pickupList .entry-block')).map(wrap=>{
+    const mode = wrap.querySelector('.pu-time-mode').value;
+    let time = '';
+    if(mode === '__other__'){
+      time = wrap.querySelector('.pu-time-other').value.trim();
+    } else {
+      const h = wrap.querySelector('.pu-hour').value;
+      const m = wrap.querySelector('.pu-min').value;
+      time = (h && m) ? `${h}:${m}` : '';
+    }
+    const placeSel = wrap.querySelector('.pu-place').value;
+    const place = placeSel === '__other__' ? wrap.querySelector('.pu-place-other').value.trim() : placeSel;
+    return { time, place };
+  }).filter(p => p.time || p.place);
+}
+
+function getDeliveryData(){
+  return Array.from(document.querySelectorAll('#deliveryList .entry-block')).map(wrap=>{
+    const timeSel = wrap.querySelector('.dl-time').value;
+    const time = timeSel === '__other__' ? wrap.querySelector('.dl-time-other').value.trim() : timeSel;
+    const place = wrap.querySelector('.dl-place').value.trim();
+    return { time, place };
+  }).filter(d => d.time || d.place);
+}
+
+/* ============ 送信 ============ */
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('statusMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const deliveryDate = document.getElementById('deliveryDate').value;
+  const shipperSel = document.getElementById('shipper').value;
+  const shipper = shipperSel === '__other__' ? document.getElementById('shipperOther').value.trim() : shipperSel;
+  const pickups = getPickupData();
+  const deliveries = getDeliveryData();
+  const notes = document.getElementById('notes').value.trim();
+  const amount = document.getElementById('amount').value;
+
+  if(!deliveryDate){ statusEl.textContent = '配達日を選択してください'; statusEl.className='status-msg err'; return; }
+  if(!shipper){ statusEl.textContent = '荷主を選択してください'; statusEl.className='status-msg err'; return; }
+  if(pickups.length === 0){ statusEl.textContent = '集荷情報を入力してください'; statusEl.className='status-msg err'; return; }
+  if(deliveries.length === 0){ statusEl.textContent = '配達情報を入力してください'; statusEl.className='status-msg err'; return; }
+
+  const payload = { deliveryDate, shipper, pickups, deliveries, notes, amount };
+
+  submitBtn.disabled = true;
+  statusEl.textContent = '送信中...';
+  statusEl.className = 'status-msg';
+
+  try{
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    statusEl.textContent = '送信しました！';
+    statusEl.className = 'status-msg ok';
+    document.getElementById('requestForm').reset();
+    document.getElementById('pickupList').innerHTML = '';
+    document.getElementById('deliveryList').innerHTML = '';
+    pickupCount = 0; deliveryCount = 0;
+    addPickupBlock(); addDeliveryBlock();
+    document.getElementById('shipperOther').classList.add('hidden');
+  }catch(err){
+    statusEl.textContent = '送信に失敗しました。通信環境を確認してください';
+    statusEl.className = 'status-msg err';
+  }finally{
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
